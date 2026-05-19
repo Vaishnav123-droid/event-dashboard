@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Crisis Playbook Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #030810;
+            color: #e2e8f0;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            padding: 20px 14px 60px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.07) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header-label {
+            font-size: 9px;
+            letter-spacing: 6px;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: bold;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #dc2626, #fca5a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #475569;
+            font-style: italic;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 1.5px solid #1e293b;
+            background: #070d1a;
+            text-align: left;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+
+        .tab-btn.active {
+            border-color: var(--color);
+            background: var(--bg);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.13);
+        }
+
+        .tab-btn-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .tab-btn-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 0;
+        }
+
+        .tab-btn.active .tab-btn-title {
+            color: var(--color);
+        }
+
+        .tab-btn-examples {
+            font-size: 10px;
+            color: #334155;
+            margin-top: 2px;
+        }
+
+        .scenario-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--color);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .scenario-section {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .scenario-section-title {
+            font-size: 10px;
+            color: var(--color);
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .scenario-section-content {
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.7;
+        }
+
+        .asset-split {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .asset-split-item {
+            font-size: 12px;
+        }
+
+        .asset-split-up { color: #4ade80; }
+        .asset-split-down { color: #f87171; }
+        .asset-split-mixed { color: #fbbf24; }
+
+        .examples-list {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .examples-list div {
+            margin-bottom: 2px;
+        }
+
+        .phases-container {
+            margin-top: 12px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .phase-badge {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .phase-badge-label {
+            color: var(--color);
+        }
+
+        .assets-label {
+            margin-bottom: 4px;
+            font-size: 10px;
+            color: #334155;
+            letter-spacing: 2px;
+        }
+
+        .assets-container {
+            margin-bottom: 24px;
+        }
+
+        .asset-row {
+            background: #070d1a;
+            border: 1px solid #0f172a;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .asset-row.expanded {
+            background: #0a0f1a;
+            border-color: rgba(220, 38, 38, 0.33);
+        }
+
+        .asset-row-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            flex-wrap: wrap;
+        }
+
+        .asset-icon {
+            font-size: 18px;
+            min-width: 28px;
+        }
+
+        .asset-label {
+            font-weight: bold;
+            font-size: 13px;
+            color: #e2e8f0;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .direction-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 90px;
+            text-align: center;
+            border: 1px solid;
+        }
+
+        .direction-up {
+            background: #052e16;
+            color: #4ade80;
+            border-color: #166534;
+        }
+
+        .direction-down {
+            background: #450a0a;
+            color: #f87171;
+            border-color: #991b1b;
+        }
+
+        .direction-mixed {
+            background: #1c1002;
+            color: #fbbf24;
+            border-color: #92400e;
+        }
+
+        .magnitude-bars {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .magnitude-label {
+            font-size: 9px;
+            color: #475569;
+            display: block;
+        }
+
+        .mag-bar {
+            display: flex;
+            gap: 2px;
+        }
+
+        .mag-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: #1e293b;
+        }
+
+        .mag-dot.filled {
+            background: var(--dot-color);
+        }
+
+        .asset-short {
+            font-size: 11px;
+            color: #64748b;
+            flex: 2;
+            min-width: 160px;
+        }
+
+        .expand-toggle {
+            color: #334155;
+            font-size: 12px;
+        }
+
+        .asset-row-content {
+            padding: 10px 14px 14px 52px;
+            border-top: 1px solid;
+            background: #050a14;
+            border-color: rgba(220, 38, 38, 0.13);
+        }
+
+        .asset-detail {
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.8;
+            border-left: 2px solid;
+            padding-left: 12px;
+            border-color: var(--color);
+            margin-bottom: 8px;
+        }
+
+        .asset-phase {
+            display: inline-block;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 5px;
+            padding: 3px 10px;
+            font-size: 10px;
+            color: #475569;
+            font-style: italic;
+        }
+
+        .comparison-section {
+            margin-bottom: 20px;
+        }
+
+        .comparison-toggle {
+            cursor: pointer;
+            padding: 10px 16px;
+            background: #0b1220;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        .comparison-toggle.active {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .comparison-table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #0f172a;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            display: none;
+        }
+
+        .comparison-table-wrapper.active {
+            display: block;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            min-width: 600px;
+        }
+
+        .comparison-table th {
+            padding: 8px 12px;
+            text-align: left;
+            color: #475569;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #0f172a;
+            background: #050912;
+            min-width: 130px;
+        }
+
+        .comparison-table th:not(:first-child) {
+            text-align: center;
+            min-width: 110px;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #070d1a;
+        }
+
+        .comparison-table tr:nth-child(odd) {
+            background: #050912;
+        }
+
+        .comparison-table td {
+            padding: 7px 12px;
+            color: #94a3b8;
+            border-bottom: 1px solid #0a1020;
+        }
+
+        .comparison-table td:not(:first-child) {
+            text-align: center;
+            padding: 6px 8px;
+        }
+
+        .comparison-cell {
+            background: var(--bg);
+            color: var(--color);
+            border-radius: 5px;
+            padding: 3px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            display: inline-block;
+            min-width: 70px;
+            border: 1px solid;
+            border-color: var(--border);
+        }
+
+        .principles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .principle-card {
+            background: #0b1220;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+
+        .principle-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .principle-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 6px;
+        }
+
+        .principle-text {
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #0f172a;
+            color: #475569;
+            font-size: 11px;
+        }
+
+        @media (max-width: 640px) {
+            .tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .principles {
+                grid-template-columns: 1fr;
+            }
+
+            .scenario-card {
+                flex-direction: column;
+            }
+
+            .scenario-section {
+                flex: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-label">MACRO ASSET BEHAVIOUR · CRISIS PLAYBOOK</div>
+            <h1>How Assets Behave in Crisis</h1>
+            <p>What ideally should happen to Stocks · Gold · Silver · Oil · Bonds · Fixed Income · Real Estate · USD across different macro crises</p>
+        </div>
+
+        <!-- SCENARIO TABS -->
+        <div class="tabs" id="tabs"></div>
+
+        <!-- SCENARIO CONTEXT CARD -->
+        <div class="scenario-card" id="scenarioCard"></div>
+
+        <!-- ASSET ROWS -->
+        <div class="assets-label">▸ CLICK ANY ASSET TO EXPAND FULL ANALYSIS</div>
+        <div class="assets-container" id="assetsContainer"></div>
+
+        <!-- COMPARISON TABLE -->
+        <div class="comparison-section">
+            <div class="comparison-toggle" id="comparisonToggle">
+                <span>📊 Cross-Scenario Comparison Table</span>
+                <span id="comparisonToggleText">▼ Show all 4 scenarios</span>
+            </div>
+            <div class="comparison-table-wrapper" id="comparisonTableWrapper">
+                <table class="comparison-table" id="comparisonTable"></table>
+            </div>
+        </div>
+
+        <!-- KEY PRINCIPLES -->
+        <div class="principles" id="principles"></div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>Crisis Playbook Dashboard • Comprehensive asset behaviour analysis across macroeconomic scenarios</p>
+        </div>
+    </div>
+
+    <script>
+        // ── DATA ─────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        const SCENARIOS = [
+            {
+                id: "war",
+                label: "WAR / Geopolitical Shock",
+                icon: "🛡️",
+                color: "#dc2626",
+                accent: "#fca5a5",
+                bg: "#1a0505",
+                border: "#7f1d1d",
+                examples: ["Gulf War 1990", "9/11 2001", "Russia-Ukraine 2022", "Israel-Iran 2026"],
+                mechanism: "Supply disruptions + government spending surge + safe-haven demand + uncertainty premium",
+                phases: ["Onset: Panic selling", "Escalation: Commodity surge", "Resolution: Equity recovery"],
+            },
+            {
+                id: "inflation",
+                label: "INFLATION / Stagflation",
+                icon: "📈",
+                color: "#d97706",
+                accent: "#fde68a",
+                bg: "#1a0e00",
+                border: "#78350f",
+                examples: ["1970s Oil Shock", "1979–82 Volcker era", "2021–23 Post-COVID inflation"],
+                mechanism: "Rising prices erode fixed income returns. Real assets & commodities outperform. Rate hikes crush bonds & growth stocks.",
+                phases: ["Early: Commodities surge", "Peak: Bonds collapse", "Late: Rate cuts fuel recovery"],
+            },
+            {
+                id: "recession",
+                label: "RECESSION / Demand Collapse",
+                icon: "📉",
+                color: "#7c3aed",
+                accent: "#c4b5fd",
+                bg: "#0d0a1a",
+                border: "#4c1d95",
+                examples: ["2001 Dot-com bust", "2008–09 GFC", "2020 COVID crash"],
+                mechanism: "Falling demand crushes earnings. Credit freezes. Risk-off flight to safety. Central banks cut rates → bonds rally.",
+                phases: ["Panic: Sell everything", "Trough: Bonds peak", "Recovery: Equities surge"],
+            },
+            {
+                id: "financial",
+                label: "FINANCIAL / Banking CRISIS",
+                icon: "🏦",
+                color: "#0891b2",
+                accent: "#7dd3fc",
+                bg: "#00111a",
+                border: "#164e63",
+                examples: ["1929 Great Depression", "2008 Lehman collapse", "2023 SVB banking crisis"],
+                mechanism: "Liquidity freeze. Everyone sells everything for CASH. Even gold falls initially. Then QE → massive reflation trade.",
+                phases: ["Crisis: Cash is king", "Stabilisation: Bonds rally", "QE era: Gold & equities explode"],
+            },
+        ];
+
+        const ASSETS = [
+            { id: "stocks", label: "Equities / Stocks", icon: "📊" },
+            { id: "gold", label: "Gold", icon: "🥇" },
+            { id: "silver", label: "Silver", icon: "🥈" },
+            { id: "oil", label: "Crude Oil", icon: "🛢️" },
+            { id: "bonds", label: "Govt Bonds (Price)", icon: "📜" },
+            { id: "yields", label: "Bond Yields", icon: "📐" },
+            { id: "fixed", label: "Fixed Deposits / Cash", icon: "🏦" },
+            { id: "realestate", label: "Real Estate", icon: "🏠" },
+            { id: "usd", label: "USD / DXY", icon: "💵" },
+            { id: "defence", label: "Defence Stocks", icon: "⚔️" },
+        ];
+
+        const MATRIX = {
+            war: {
+                stocks:     { phase: "INITIAL DROP → Recovery", direction: "mixed", magnitude: 3, short: "↓ Panic sell-off, then recovers within months", detail: "Historically markets recover in 3–6 months if war is contained. Gulf War: S&P down 20% then +35%. Defence sector outperforms broadly." },
+                gold:       { phase: "STRONG SURGE", direction: "up", magnitude: 5, short: "↑ Safe haven demand spikes immediately", detail: "Gold surged 70% in WWII, +16% in Crimea 2014. Governments print money to fund war → inflation fear → gold rally. Primary beneficiary of war." },
+                silver:     { phase: "MODERATE SURGE", direction: "up", magnitude: 3, short: "↑ Follows gold but with industrial caveat", detail: "Silver surges with gold on safe-haven demand but can lag if industrial demand drops due to economic slowdown from war." },
+                oil:        { phase: "SHARP SPIKE", direction: "up", magnitude: 5, short: "↑ Supply disruption premium instantly priced", detail: "Oil spikes almost immediately if war is in/near producing regions. Gulf War: +120%. Russia-Ukraine: +70%. Biggest and fastest mover in war scenarios." },
+                bonds:      { phase: "FLIGHT TO SAFETY → then DOWN", direction: "mixed", magnitude: 3, short: "↑ Initially as safe-haven, then ↓ as inflation rises", detail: "Initial flight to US Treasuries pushes bond prices up (yields down). But war = govt spending = inflation = yields rise later, crushing bond prices." },
+                yields:     { phase: "DOWN then UP", direction: "mixed", magnitude: 3, short: "↓ Initially on safe-haven, then ↑ on inflation", detail: "Yields fall as demand for bonds surges in initial panic. Then war-driven inflation and govt borrowing push yields back up sharply." },
+                fixed:      { phase: "UNDERPERFORMS", direction: "down", magnitude: 2, short: "↓ Real returns eroded by war inflation", detail: "War causes inflation. Fixed income at fixed rates loses purchasing power in real terms. Cash is safe from volatility but loses real value." },
+                realestate: { phase: "FROZEN / DROPS", direction: "down", magnitude: 3, short: "↓ Liquidity dries up, transactions halt", detail: "Real estate in war zones collapses. Even in unaffected countries, liquidity freezes and transactions halt during acute crisis phases." },
+                usd:        { phase: "SURGES (if US involved or safe haven)", direction: "up", magnitude: 4, short: "↑ Dollar as global reserve = war safe-haven", detail: "USD typically surges in war as global capital flees to the world's reserve currency. Exception: if war undermines US credibility or budget." },
+                defence:    { phase: "STRONG OUTPERFORMER", direction: "up", magnitude: 5, short: "↑ Biggest winner. Budget increases locked in", detail: "Defence stocks outpaced S&P 500 by 30% in Gulf War. Russia-Ukraine: Aerospace & Defence index +12% vs S&P -19%. Multi-year spending cycles benefit entire sector." },
+            },
+            inflation: {
+                stocks:     { phase: "MIXED — Value beats Growth", direction: "mixed", magnitude: 3, short: "↓ Growth stocks crushed; Value/Energy/Commodities win", detail: "High inflation = high rates = lower DCF valuations for growth stocks. But commodity, energy, and value stocks outperform. 1970s: S&P flat in real terms." },
+                gold:       { phase: "OUTPERFORMS (long-term)", direction: "up", magnitude: 4, short: "↑ Classic inflation hedge over multi-year periods", detail: "Gold is THE inflation hedge over 5–10 year periods. 1970s: Gold rose 1,700%. However, short-term correlation is weaker than people think." },
+                silver:     { phase: "STRONG OUTPERFORMER", direction: "up", magnitude: 4, short: "↑ Industrial + monetary demand both surge", detail: "Silver outperforms gold in inflationary periods due to dual demand — industrial uses expand as economies overheat, plus monetary safe-haven." },
+                oil:        { phase: "CAUSE OF INFLATION / Surges", direction: "up", magnitude: 5, short: "↑ Often the cause and beneficiary of inflation", detail: "Energy prices are the biggest inflation driver. If inflation is oil-led (supply shock), oil keeps rising. OPEC pricing power maximised in inflationary regimes." },
+                bonds:      { phase: "BIGGEST LOSER", direction: "down", magnitude: 5, short: "↓ Fixed coupons worth less in real terms. Price collapses", detail: "2022 is the textbook case. US 10yr bonds fell 18% as inflation surged — worst year for bonds in 100 years. Rising rates = falling bond prices. The maths is brutal." },
+                yields:     { phase: "SURGES", direction: "up", magnitude: 5, short: "↑ Central banks hike rates aggressively to fight inflation", detail: "Yield is the instrument of inflation control. Fed raised rates from 0% to 5.25% in 2022–23. Bond yields rise = bond prices fall. Completely inverted to crisis scenario." },
+                fixed:      { phase: "INITIALLY GOOD, THEN ERODED", direction: "mixed", magnitude: 2, short: "↑ Rate hikes raise FD rates, but real returns still lag", detail: "As central banks hike, FD rates improve. But if inflation runs at 8% and FD gives 6%, you're still losing 2% in real terms. Better than bonds but still losing." },
+                realestate: { phase: "MIXED — Rent rises, values eventually fall", direction: "mixed", magnitude: 3, short: "↑ Initially as hard asset, then ↓ when rates bite", detail: "Early inflation: property as hard asset appreciates. But when central banks hike rates aggressively, mortgage costs surge and property values collapse (2022 US)." },
+                usd:        { phase: "FALLS if US inflation is high", direction: "down", magnitude: 3, short: "↓ Purchasing power erosion weakens dollar", detail: "High US inflation erodes dollar purchasing power. BUT if Fed hikes aggressively (2022), real yields rise and dollar can paradoxically strengthen." },
+                defence:    { phase: "MODERATE — Cost inflation headwind", direction: "mixed", magnitude: 2, short: "↔ Budget grows but input costs also rise", detail: "Defence budgets rise with inflation but procurement costs also inflate. Net effect is moderate. Not the primary play in inflationary scenarios." },
+            },
+            recession: {
+                stocks:     { phase: "SHARP COLLAPSE", direction: "down", magnitude: 5, short: "↓ Earnings fall, valuations compress, panic selling", detail: "Recessions are the primary enemy of equities. 2008: S&P -57%. 2020: -34% in 40 days. Earnings guidance collapses, credit tightens, valuations reset." },
+                gold:       { phase: "RISES (delayed)", direction: "up", magnitude: 3, short: "↑ Safe haven but initially may dip with stocks", detail: "Gold eventually rises in recessions as central banks cut rates and print money. But in acute panic phases, can be sold for cash. Best to buy the dip." },
+                silver:     { phase: "FALLS THEN RECOVERS", direction: "mixed", magnitude: 3, short: "↓ Industrial demand collapses; monetary demand helps", detail: "Recession kills industrial demand for silver (electronics, manufacturing). But monetary safe-haven partially offsets. Net: underperforms gold in recessions." },
+                oil:        { phase: "COLLAPSES", direction: "down", magnitude: 5, short: "↓ Demand destruction is immediate and brutal", detail: "Recession = less economic activity = less oil needed. 2008: Oil from $147 to $34. 2020: Oil went NEGATIVE (-$37). Biggest recessionary loser after equities." },
+                bonds:      { phase: "BIGGEST WINNER", direction: "up", magnitude: 5, short: "↑ Flight to safety + rate cuts push prices up sharply", detail: "Recessions are when bonds shine. Central banks cut rates aggressively → bond prices surge. 2008: US Treasuries up 20%. The classic 60/40 portfolio is built on this relationship." },
+                yields:     { phase: "COLLAPSES", direction: "down", magnitude: 5, short: "↓ Rate cuts drive yields to near-zero or negative", detail: "Central banks cut rates to stimulate economy. Fed went 5.25% → 0% in 2008. Yields collapse as demand for safe bonds explodes and supply of money expands." },
+                fixed:      { phase: "TEMPORARILY GOOD, THEN POOR", direction: "mixed", magnitude: 2, short: "↑ Safe, but rate cuts soon destroy FD returns", detail: "FDs are initially safe but as central banks slash rates, new FD rates crater. Existing FD holders are okay; new money gets near-zero returns." },
+                realestate: { phase: "SHARP CORRECTION", direction: "down", magnitude: 4, short: "↓ Credit freeze + unemployment = forced selling", detail: "Recessions cause unemployment, credit tightening, and forced selling. 2008 US housing collapsed 30%. India relatively protected by low mortgage penetration." },
+                usd:        { phase: "SURGES (if US is safe haven)", direction: "up", magnitude: 4, short: "↑ Global dollar demand surges as risk is sold", detail: "In global recessions, everyone rushes to dollar as reserve currency. DXY surged to 20-year highs in 2022. Paradoxically strong even as US itself weakens." },
+                defence:    { phase: "RESILIENT / OUTPERFORMS", direction: "up", magnitude: 3, short: "↑ Govt spending is countercyclical. Recession-proof", detail: "Defence budgets are politically sticky — hard to cut. In recessions, govts use defence spending as stimulus. Relative outperformer vs broader market." },
+            },
+            financial: {
+                stocks:     { phase: "EXTREME CRASH → Massive recovery", direction: "down", magnitude: 5, short: "↓ 40–60% crash. Then QE fuels multi-year bull run", detail: "2008: S&P -57%, Nifty -60%. Then QE stimulus = 10-year bull market. Financial crises create the best long-term buying opportunities in equities." },
+                gold:       { phase: "FALLS FIRST, THEN EXPLODES", direction: "mixed", magnitude: 5, short: "↓ Initial liquidity sell-off, then ↑ 160%+ on QE", detail: "The 2008 paradox: gold fell from $1,011 to $692 as everyone sold for CASH. Then QE fear drove gold from $692 to $1,917 — a 163% rally. Most misunderstood asset in a crisis." },
+                silver:     { phase: "BRUTAL CRASH → 460% rally", direction: "mixed", magnitude: 5, short: "↓ $21→$8.88 crash, then ↑ $8.88→$49 post-crisis", detail: "Silver's 2008 story: Crashed 57% to $8.88 as liquidity evaporated. Then QE, dollar debasement, and ETF flows drove 460% rally to $49.51 by 2011. Extreme on both sides." },
+                oil:        { phase: "COLLAPSES VIOLENTLY", direction: "down", magnitude: 5, short: "↓ $147→$34 in 5 months. Demand destruction + panic", detail: "Financial crises destroy oil demand immediately. 2008: From $147 to $34. 2020: Oil went negative. The combination of demand collapse and financial deleveraging is lethal for oil." },
+                bonds:      { phase: "INITIALLY SAFE HAVEN → Then QE distorts", direction: "up", magnitude: 4, short: "↑ The safest asset during acute crisis phase", detail: "Govt bonds are the primary safe haven in financial crises. 2008: Treasuries +20%. But then QE floods the market, suppressing yields for a decade." },
+                yields:     { phase: "CRASHES to near-zero or below", direction: "down", magnitude: 5, short: "↓ Emergency rate cuts + QE = yields to floor", detail: "Central banks go to zero or negative. Fed: 5%→0% in 2008. ECB went negative. The entire yield curve is crushed by policy intervention." },
+                fixed:      { phase: "SAFE but THEN USELESS", direction: "mixed", magnitude: 2, short: "↑ Capital preserved, then rates crater to near zero", detail: "FDs survive the crisis intact — no market value loss. But post-crisis, rates fall to near-zero for 10+ years (2009–2021). Your FD renews at 3% in a world that was 8%." },
+                realestate: { phase: "FREEZE → CRASH", direction: "down", magnitude: 5, short: "↓ Credit freeze kills transactions. Values collapse.", detail: "Financial crises are often caused by real estate (2008). Credit freeze means no mortgages = no buyers = forced selling. US housing -30%, Ireland -60%, Spain -50%." },
+                usd:        { phase: "INITIALLY SURGES → Then weakens on QE", direction: "mixed", magnitude: 4, short: "↑ Acute phase: rush to dollar. Then QE devalues it", detail: "Financial crises = rush to dollar initially. But QE = money printing = dollar devaluation over time. This is exactly why gold rallied so strongly post-2008." },
+                defence:    { phase: "MILD OUTPERFORMER", direction: "up", magnitude: 2, short: "↑ Govt stimulus often includes defence spending", detail: "Defence stocks are relatively insulated from financial crises as budgets are govt-controlled. Not a primary theme, but outperforms vs broader market." },
+            },
+        };
+
+        const DIR_CONFIG = {
+            up:    { label: "↑ RISES",   color: "#4ade80", bg: "#052e16", border: "#166534" },
+            down:  { label: "↓ FALLS",   color: "#f87171", bg: "#450a0a", border: "#991b1b" },
+            mixed: { label: "↕ MIXED",   color: "#fbbf24", bg: "#1c1002", border: "#92400e" },
+            flat:  { label: "→ FLAT",    color: "#94a3b8", bg: "#0f172a", border: "#334155" },
+        };
+
+        const PRINCIPLES = [
+            { icon: "🔑", title: "The QE Paradox", text: "In financial crises, even gold falls first (liquidity). But QE response = gold & silver explode. Buy the panic dip." },
+            { icon: "⚖️", title: "Bonds vs Gold", text: "Recessions: Bonds win. Inflation: Bonds are crushed, Gold wins. Know which crisis type you're in." },
+            { icon: "🛢️", title: "Oil = Amplifier", text: "Oil surges in war and inflation. Collapses in recession and financial crises. Most volatile across all scenarios." },
+            { icon: "💵", title: "Dollar Paradox", text: "Dollar strengthens in war & recession (safe haven) but weakens under QE/inflation. Reserve currency is complex." },
+            { icon: "⚔️", title: "Defence Always Wins", text: "The only asset class that outperforms across nearly all scenarios. Governments always fund war and security." },
+            { icon: "📐", title: "Yields = Inverse of Bonds", text: "Remember: Bond price ↑ = Yield ↓. They always move opposite. In crises yields fall; in inflation yields surge." },
+        ];
+
+        // ── STATE ─────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        let activeScenario = "war";
+        let expandedAsset = null;
+        let compareMode = false;
+
+        // ── HELPER FUNCTIONS ─────────────────────────────────────────────────────────────────────────────────────────
+
+        function setCSSVariables(scenario) {
+            const root = document.documentElement;
+            root.style.setProperty('--color', scenario.color);
+            root.style.setProperty('--bg', scenario.bg);
+            root.style.setProperty('--border', scenario.border);
+        }
+
+        function createMagBar(magnitude, color) {
+            let html = '<div class="mag-bar">';
+            for (let i = 1; i <= 5; i++) {
+                const filled = i <= magnitude ? ' filled' : '';
+                html += `<div class="mag-dot${filled}" style="--dot-color: ${color}"></div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function formatAssetSplit(scenario) {
+            const data = MATRIX[scenario.id];
+            let risers = 0, fallers = 0, mixed = 0;
+            
+            ASSETS.forEach(asset => {
+                if (data[asset.id].direction === "up") risers++;
+                else if (data[asset.id].direction === "down") fallers++;
+                else if (data[asset.id].direction === "mixed") mixed++;
+            });
+
+            return { risers, fallers, mixed };
+        }
+
+        // ── RENDER FUNCTIONS ─────────────────────────────────────────────────────────────────────────────────────────
+
+        function renderTabs() {
+            const tabsEl = document.getElementById('tabs');
+            tabsEl.innerHTML = SCENARIOS.map(s => `
+                <button class="tab-btn${s.id === activeScenario ? ' active' : ''}" 
+                        data-scenario="${s.id}"
+                        style="--color: ${s.color}; --bg: ${s.bg}">
+                    <div class="tab-btn-icon">${s.icon}</div>
+                    <div class="tab-btn-title">${s.label}</div>
+                    <div class="tab-btn-examples">${s.examples.slice(0, 2).join(' · ')}</div>
+                </button>
+            `).join('');
+
+            tabsEl.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    activeScenario = e.currentTarget.dataset.scenario;
+                    expandedAsset = null;
+                    render();
+                });
+            });
+        }
+
+        function renderScenarioCard() {
+            const scenario = SCENARIOS.find(s => s.id === activeScenario);
+            const split = formatAssetSplit(scenario);
+            const cardEl = document.getElementById('scenarioCard');
+
+            cardEl.style.setProperty('--color', scenario.color);
+            cardEl.style.setProperty('--bg', scenario.bg);
+            cardEl.style.setProperty('--border', scenario.border);
+
+            cardEl.innerHTML = `
+                <div class="scenario-section" style="flex: 2; min-width: 200px;">
+                    <div class="scenario-section-title">Mechanism</div>
+                    <div class="scenario-section-content">${scenario.mechanism}</div>
+                </div>
+                <div class="scenario-section" style="flex: 1; min-width: 140px;">
+                    <div class="scenario-section-title">Examples</div>
+                    <div class="examples-list">
+                        ${scenario.examples.map(e => `<div>• ${e}</div>`).join('')}
+                    </div>
+                </div>
+                <div class="scenario-section" style="flex: 1; min-width: 120px;">
+                    <div class="scenario-section-title">Asset Split</div>
+                    <div class="asset-split">
+                        <div class="asset-split-item asset-split-up">↑ Rises: ${split.risers}</div>
+                        <div class="asset-split-item asset-split-down">↓ Falls: ${split.fallers}</div>
+                        <div class="asset-split-item asset-split-mixed">↕ Mixed: ${split.mixed}</div>
+                    </div>
+                </div>
+                <div class="phases-container">
+                    ${scenario.phases.map((p, i) => `
+                        <div class="phase-badge" style="--border: ${scenario.border}">
+                            <span class="phase-badge-label">Phase ${i + 1}:</span> ${p}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            setCSSVariables(scenario);
+        }
+
+        function renderAssets() {
+            const scenario = SCENARIOS.find(s => s.id === activeScenario);
+            const data = MATRIX[activeScenario];
+            const containerEl = document.getElementById('assetsContainer');
+
+            containerEl.innerHTML = ASSETS.map(asset => {
+                const assetData = data[asset.id];
+                const dir = DIR_CONFIG[assetData.direction];
+                const isExpanded = expandedAsset === asset.id;
+
+                let html = `
+                    <div class="asset-row${isExpanded ? ' expanded' : ''}" data-asset="${asset.id}">
+                        <div class="asset-row-header">
+                            <span class="asset-icon">${asset.icon}</span>
+                            <span class="asset-label">${asset.label}</span>
+                            <span class="direction-badge direction-${assetData.direction}">${dir.label}</span>
+                            <div class="magnitude-bars">
+                                <span class="magnitude-label">STRENGTH</span>
+                                ${createMagBar(assetData.magnitude, dir.color)}
+                            </div>
+                            <span class="asset-short">${assetData.short}</span>
+                            <span class="expand-toggle">${isExpanded ? '▲' : '▼'}</span>
+                        </div>
+                `;
+
+                if (isExpanded) {
+                    html += `
+                        <div class="asset-row-content" style="--color: ${scenario.color}">
+                            <div class="asset-detail" style="--color: ${scenario.color}">
+                                ${assetData.detail}
+                            </div>
+                            <div class="asset-phase">
+                                📅 Phase: ${assetData.phase}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+                return html;
+            }).join('');
+
+            containerEl.querySelectorAll('.asset-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const assetId = row.dataset.asset;
+                    expandedAsset = expandedAsset === assetId ? null : assetId;
+                    renderAssets();
+                });
+            });
+        }
+
+        function renderComparisonTable() {
+            const tableEl = document.getElementById('comparisonTable');
+
+            let html = '<thead><tr style="background: #050912;"><th style="padding: 8px 12px; text-align: left; color: #475569; letter-spacing: 1px; border-bottom: 1px solid #0f172a; min-width: 130px;">ASSET</th>';
+
+            SCENARIOS.forEach(s => {
+                html += `<th style="padding: 8px 10px; text-align: center; color: ${s.color}; letter-spacing: 1px; border-bottom: 1px solid #0f172a; min-width: 110px;">${s.icon} ${s.label.split(' /')[0]}</th>`;
+            });
+
+            html += '</tr></thead><tbody>';
+
+            ASSETS.forEach((asset, i) => {
+                html += `<tr style="background: ${i % 2 === 0 ? '#070d1a' : '#050912'}; border-bottom: 1px solid #0a1020;">`;
+                html += `<td style="padding: 7px 12px; color: #94a3b8; white-space: nowrap;">${asset.icon} ${asset.label}</td>`;
+
+                SCENARIOS.forEach(s => {
+                    const d = MATRIX[s.id][asset.id];
+                    const dc = DIR_CONFIG[d.direction];
+                    html += `
+                        <td style="padding: 6px 8px; text-align: center;">
+                            <div class="comparison-cell" style="--bg: ${dc.bg}; --color: ${dc.color}; --border: ${dc.border};">
+                                ${dc.label}
+                                <div style="margin-top: 2px;">
+                                    ${createMagBar(d.magnitude, dc.color)}
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                });
+
+                html += '</tr>';
+            });
+
+            html += '</tbody>';
+            tableEl.innerHTML = html;
+        }
+
+        function renderPrinciples() {
+            const principlesEl = document.getElementById('principles');
+            principlesEl.innerHTML = PRINCIPLES.map(p => `
+                <div class="principle-card">
+                    <div class="principle-icon">${p.icon}</div>
+                    <div class="principle-title">${p.title}</div>
+                    <div class="principle-text">${p.text}</div>
+                </div>
+            `).join('');
+        }
+
+        function setupComparisonToggle() {
+            const toggle = document.getElementById('comparisonToggle');
+            const wrapper = document.getElementById('comparisonTableWrapper');
+            const text = document.getElementById('comparisonToggleText');
+
+            toggle.addEventListener('click', () => {
+                compareMode = !compareMode;
+                toggle.classList.toggle('active');
+                wrapper.classList.toggle('active');
+                text.textContent = compareMode ? '▲ Hide' : '▼ Show all 4 scenarios';
+                if (compareMode) {
+                    renderComparisonTable();
+                }
+            });
+        }
+
+        function render() {
+            renderTabs();
+            renderScenarioCard();
+            renderAssets();
+            renderPrinciples();
+        }
+
+        // ── INIT ─────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        document.addEventListener('DOMContentLoaded', () => {
+            render();
+            setupComparisonToggle();
+        });
+    </script>
+</body>
+</html>
